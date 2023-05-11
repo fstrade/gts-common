@@ -1,0 +1,26 @@
+[package]
+name = "gts-transport"
+version = "0.1.0"
+description = "Gts transport"
+edition = "2021"
+
+[dependencies]
+libc = "0.2"
+minstant = "0.1.2"
+log = "0.4.17"
+env_logger = "0.10.0"
+thiserror = "1.0"
+anyhow = "1.0.68"
+core_affinity = "0.8.0"
+bytemuck = "1.13.1"
+
+[dev-dependencies]
+criterion = "0.3"
+#quanta = "0.9"
+rand = "0.8"
+libc = "0.2"
+minstant = "0.1.2"
+
+[[bench]]
+name = "criterion"
+harness = false
