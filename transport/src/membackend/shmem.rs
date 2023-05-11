@@ -35,6 +35,7 @@ pub struct ShmemHolder<T> {
     data: *mut T,
     // For details, see:
     // https://github.com/rust-lang/rfcs/blob/master/text/0769-sound-generic-drop.md#phantom-data
+    // just to say, that Self ownes T.
     _marker: PhantomData<T>,
 }
 
@@ -84,7 +85,7 @@ impl<T: Zeroable> ShmemHolder<T> {
             name: name.to_string(),
             // seqnum: 0,
             data: data_ptr,
-            _marker: PhantomData{},
+            _marker: PhantomData {},
         }
     }
 
@@ -118,7 +119,7 @@ impl<T: Zeroable> ShmemHolder<T> {
             fd,
             name: name.to_string(),
             data: data_ptr,
-            _marker: PhantomData{},
+            _marker: PhantomData {},
         }
     }
 }
