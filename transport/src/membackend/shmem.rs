@@ -35,7 +35,8 @@ pub struct ShmemHolder<T> {
     data: *mut T,
     // For details, see:
     // https://github.com/rust-lang/rfcs/blob/master/text/0769-sound-generic-drop.md#phantom-data
-    // just to say, that Self ownes T.
+    // just to say, that Self owns T. + Dropcheck,
+    // probably, this is overkill, as soon as there is no usecases when T is not copy type.
     _marker: PhantomData<T>,
 }
 
