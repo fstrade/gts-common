@@ -29,6 +29,7 @@ impl<T> Clone for MemChunkHolder<T> {
 impl<T> MemChunkHolder<T> {
     /// Safety: T must be Zeroed.
     pub unsafe fn init_zeroed() -> Self {
+        // SAFETY: T must be Zeroed.
         let data = Arc::new(UnsafeCell::new(unsafe { std::mem::zeroed() }));
         let ptr = data.get();
         Self {
