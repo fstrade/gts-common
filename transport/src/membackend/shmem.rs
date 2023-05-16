@@ -1,6 +1,10 @@
+//! Shmem creates/connect to chunk of shared memory.
+//! While drops shmem holder ShmemHolder<T> doesn't call drop of underlying T.
+//! Logicaly T is Copy type, but could contain some Atomic* data, so it's not pure rust-Copy type
+//!
 //! # Examples
 //!
-//! Demo of shmem lfspmc `ShmemSender` `ShmemReceiver`
+//! Find in lfspmc mod
 //! ```
 //! use anyhow::Result;
 //!
@@ -35,8 +39,9 @@ pub struct ShmemHolder<T> {
     data: *mut T,
     // For details, see:
     // https://github.com/rust-lang/rfcs/blob/master/text/0769-sound-generic-drop.md#phantom-data
-    // just to say, that Self owns T. + Dropcheck,
-    // probably, this is overkill, as soon as there is no usecases when T is not copy type.
+    // just to say, that Self owns T. to bypass dropcheck,
+    // probably, this is overkill, as soon as there is no usecases when T is not copy type or
+    // almost copy type.
     _marker: PhantomData<T>,
 }
 
@@ -86,11 +91,18 @@ impl<T: Zeroable> ShmemHolder<T> {
             name: name.to_string(),
             // seqnum: 0,
             data: data_ptr,
-            _marker: PhantomData {},
+            _marker: PhantomData,
         }
     }
+    pub fn connect_rw(name: &str) -> Self {
+        Self::connect_ext(name, true)
+    }
 
-    pub fn connect(name: &str, write_permission: bool) -> Self {
+    pub fn connect_ro(name: &str) -> Self {
+        Self::connect_ext(name, false)
+    }
+
+    pub fn connect_ext(name: &str, write_permission: bool) -> Self {
         let (shmem_flag, mmap_flag) = if write_permission {
             (O_RDWR, PROT_WRITE)
         } else {
@@ -120,7 +132,7 @@ impl<T: Zeroable> ShmemHolder<T> {
             fd,
             name: name.to_string(),
             data: data_ptr,
-            _marker: PhantomData {},
+            _marker: PhantomData,
         }
     }
 }
@@ -135,6 +147,9 @@ impl<T> Drop for ShmemHolder<T> {
             self.data,
             Self::LENGTH
         );
+
+        // NOTE: update docs & examples. drop of T is never called.
+        // std::ptr::drop_in_place(self.data);
 
         let rname: &str = &self.name;
         unsafe {
