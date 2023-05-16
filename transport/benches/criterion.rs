@@ -136,9 +136,9 @@ fn bench_shmem(c: &mut Criterion) {
     let test_shmem1 = "crit_tx1";
     let test_shmem2 = "crit_tx2";
     let mut tx1 = SpMcSender::<TestData, _>::new(ShmemHolder::create(test_shmem1));
-    let mut rx1 = SpMcReceiver::<TestData, _>::new(ShmemHolder::connect(test_shmem1));
+    let mut rx1 = SpMcReceiver::<TestData, _>::new(ShmemHolder::connect_ro(test_shmem1));
     let mut tx2 = SpMcSender::<TestData, _>::new(ShmemHolder::create(test_shmem2));
-    let mut rx2 = SpMcReceiver::<TestData, _>::new(ShmemHolder::connect(test_shmem2));
+    let mut rx2 = SpMcReceiver::<TestData, _>::new(ShmemHolder::connect_ro(test_shmem2));
     //
     // let mut tx1: ShmemSender<TestData> = ShmemSender::create("tx1");
     // let mut rx1: ShmemReceiver<TestData> = ShmemReceiver::connect("tx1");
@@ -246,9 +246,9 @@ fn bench_shmem_big(c: &mut Criterion) {
     let test_shmem1 = "critb_tx1";
     let test_shmem2 = "critb_tx2";
     let mut tx1 = SpMcSender::<TestDataT, _>::new(ShmemHolder::create(test_shmem1));
-    let mut rx1 = SpMcReceiver::<TestDataT, _>::new(ShmemHolder::connect(test_shmem1));
+    let mut rx1 = SpMcReceiver::<TestDataT, _>::new(ShmemHolder::connect_ro(test_shmem1));
     let mut tx2 = SpMcSender::<TestDataT, _>::new(ShmemHolder::create(test_shmem2));
-    let mut rx2 = SpMcReceiver::<TestDataT, _>::new(ShmemHolder::connect(test_shmem2));
+    let mut rx2 = SpMcReceiver::<TestDataT, _>::new(ShmemHolder::connect_ro(test_shmem2));
 
     let anc = minstant::Anchor::new();
     core_affinity::set_for_current(core_affinity::CoreId { id: 2 });

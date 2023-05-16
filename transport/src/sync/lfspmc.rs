@@ -225,7 +225,7 @@ mod tests {
     fn test_simple_ping() {
         let shmem_name = "testtx1simple";
         let mut tx1 = SpMcSender::<TestData, _>::new(ShmemHolder::create(shmem_name));
-        let mut rx1 = SpMcReceiver::<TestData, _>::new(ShmemHolder::connect(shmem_name, false));
+        let mut rx1 = SpMcReceiver::<TestData, _>::new(ShmemHolder::connect_ro(shmem_name));
 
         let res = rx1.try_recv();
         assert!(matches!(res, Err(GtsTransportError::Unitialized)));
@@ -250,7 +250,7 @@ mod tests {
     fn test_simple_ping_with_unhang() {
         let shmem_name = "testtx1simpleunhang";
         let mut tx1 = SpMcSender::<TestData, _>::new(ShmemHolder::create(shmem_name));
-        let mut rx1 = SpMcReceiver::<TestData, _>::new(ShmemHolder::connect(shmem_name, false));
+        let mut rx1 = SpMcReceiver::<TestData, _>::new(ShmemHolder::connect_ro(shmem_name));
 
         let res = rx1.try_recv_or_cached();
         assert!(matches!(res, Err(GtsTransportError::Unitialized)));
@@ -302,9 +302,9 @@ mod tests {
         let test_shmem1 = "testtx1heavy";
         let test_shmem2 = "testtx2heavy";
         let mut tx1 = SpMcSender::<TestData, _>::new(ShmemHolder::create(test_shmem1));
-        let mut rx1 = SpMcReceiver::<TestData, _>::new(ShmemHolder::connect(test_shmem1, false));
+        let mut rx1 = SpMcReceiver::<TestData, _>::new(ShmemHolder::connect_ro(test_shmem1));
         let mut tx2 = SpMcSender::<TestData, _>::new(ShmemHolder::create(test_shmem2));
-        let mut rx2 = SpMcReceiver::<TestData, _>::new(ShmemHolder::connect(test_shmem2, false));
+        let mut rx2 = SpMcReceiver::<TestData, _>::new(ShmemHolder::connect_ro(test_shmem2));
 
         let server = std::thread::spawn(move || {
             let mut last_val;
