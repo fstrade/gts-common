@@ -25,7 +25,6 @@ where
 impl<T, const RSIZE: usize> MockThreadLogBacked<RSIZE, T>
 where
     T: Copy + Send + 'static + Debug,
-    //        BackT: Clone + MemHolder<SpScRingData<RSIZE, T>> + Send + 'static,
 {
     pub fn new() -> Self {
         let flag = Arc::new(Mutex::new(false));
