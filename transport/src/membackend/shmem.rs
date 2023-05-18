@@ -139,14 +139,14 @@ impl<T: Zeroable> ShmemHolder<T> {
 
 impl<T> Drop for ShmemHolder<T> {
     fn drop(&mut self) {
-        println!(
-            "Drop ShmemHolder {}/{:?}/{} {:p}@{} ",
-            self.fd,
-            self.role,
-            self.name,
-            self.data,
-            Self::LENGTH
-        );
+        // println!(
+        //     "Drop ShmemHolder {}/{:?}/{} {:p}@{} ",
+        //     self.fd,
+        //     self.role,
+        //     self.name,
+        //     self.data,
+        //     Self::LENGTH
+        // );
 
         // NOTE: update docs & examples. drop of T is never called.
         // std::ptr::drop_in_place(self.data);

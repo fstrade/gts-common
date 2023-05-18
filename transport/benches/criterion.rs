@@ -67,7 +67,6 @@ fn bench_atomic_swap(c: &mut Criterion) {
             }
             spin2.store(last_val, Ordering::Release);
             if last_val == 0 {
-                println!("QUITE");
                 break;
             }
         }
@@ -164,7 +163,6 @@ fn bench_shmem(c: &mut Criterion) {
             tx2.send(next_val).unwrap();
             last_val = next_val;
             if last_val.timestamp == 0 {
-                println!("QUIT");
                 break;
             }
         }
@@ -217,10 +215,10 @@ fn bench_shmem(c: &mut Criterion) {
             //black_box(next_val);
         });
     });
-    println!(
-        "OK = {}, {} {}",
-        counter_ok, counter_err_again, counter_err_bad
-    );
+    // println!(
+    //     "OK = {}, {} {}",
+    //     counter_ok, counter_err_again, counter_err_bad
+    // );
 
     group.bench_function("ping ", |b| {
         b.iter(|| {
@@ -267,7 +265,6 @@ fn bench_shmem_big(c: &mut Criterion) {
             tx2.send(next_val).unwrap();
             last_val = next_val;
             if last_val.timestamp == 0 {
-                println!("QUIT");
                 break;
             }
         }
@@ -322,11 +319,6 @@ fn bench_shmem_big(c: &mut Criterion) {
             //black_box(next_val);
         });
     });
-
-    println!(
-        "OK = {}, {} {}",
-        counter_ok, counter_err_again, counter_err_bad
-    );
 
     group.bench_function("ping  ", |b| {
         b.iter(|| {
