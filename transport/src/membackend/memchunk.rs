@@ -17,6 +17,8 @@ pub struct MemChunkHolder<T> {
     data: *mut T,
 }
 
+unsafe impl<T> Send for MemChunkHolder<T> {}
+
 impl<T> Clone for MemChunkHolder<T> {
     fn clone(&self) -> Self {
         MemChunkHolder {

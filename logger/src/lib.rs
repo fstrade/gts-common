@@ -1,6 +1,6 @@
 pub mod error;
-pub mod logclient;
 pub mod logbackend;
+pub mod logclient;
 
 #[cfg(test)]
 mod tests {
