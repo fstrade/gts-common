@@ -1,4 +1,5 @@
 use crate::error::GtsLoggerError;
+pub mod consolelogger;
 pub mod mock;
 pub mod threadmock;
 
