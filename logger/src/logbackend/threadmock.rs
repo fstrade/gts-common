@@ -89,7 +89,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::logbackend::threadmock::MockThreadLogBacked;
-    use crate::logclient::LogClient;
+    use crate::logclient::{Log, LogClient};
     use arrayvec::ArrayString;
     use serde::{Deserialize, Serialize};
     use std::time::Duration;
