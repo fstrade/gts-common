@@ -96,7 +96,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::logbackend::consolelogger::{ConsoleThreadLogBacked, LogEventTs};
-    use crate::logclient::LogClient;
+    use crate::logclient::{Log, LogClient};
     use arrayvec::ArrayString;
     use serde::{Deserialize, Serialize};
 

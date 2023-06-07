@@ -29,7 +29,7 @@ impl<T: Copy> LogBackend<T> for MockLogBacked<T> {
 #[cfg(test)]
 mod tests {
     use crate::logbackend::mock::MockLogBacked;
-    use crate::logclient::LogClient;
+    use crate::logclient::{Log, LogClient};
     use arrayvec::ArrayString;
     use serde::{Deserialize, Serialize};
 

@@ -1,6 +1,6 @@
 use arrayvec::ArrayString;
 use gts_logger::logbackend::consolelogger::{ConsoleThreadLogBacked, LogEventTs};
-use gts_logger::logclient::LogClient;
+use gts_logger::logclient::{Log, LogClient};
 use log::info;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;

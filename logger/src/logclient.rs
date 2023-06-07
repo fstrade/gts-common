@@ -7,19 +7,31 @@ pub struct LogClient<BackendT: LogBackend<EventT>, EventT> {
     _data: PhantomData<EventT>,
 }
 
-impl<BackendT: LogBackend<EventT>, EventT> LogClient<BackendT, EventT> {
-    pub fn new(backend: BackendT) -> Self {
+pub trait Log {
+    type Backend;
+    type Event;
+
+    fn new(backend: Self::Backend) -> Self;
+    fn log(&self, event: Self::Event) -> Result<(), GtsLoggerError>;
+    fn backend(&self) -> &Self::Backend;
+}
+
+impl<BackendT: LogBackend<EventT>, EventT> Log for LogClient<BackendT, EventT> {
+    type Backend = BackendT;
+    type Event = EventT;
+
+    fn new(backend: Self::Backend) -> Self {
         Self {
             backend: backend,
             _data: PhantomData {},
         }
     }
 
-    pub fn log(&self, event: EventT) -> Result<(), GtsLoggerError> {
+    fn log(&self, event: Self::Event) -> Result<(), GtsLoggerError> {
         self.backend.log(event)
     }
 
-    pub fn backend(&self) -> &BackendT {
+    fn backend(&self) -> &Self::Backend {
         &self.backend
     }
 }
