@@ -5,7 +5,7 @@ pub mod logclient;
 #[cfg(test)]
 mod tests {
     use crate::logbackend::mock::MockLogBacked;
-    use crate::logclient::{Log, LogClient};
+    use crate::logclient::LogClient;
     use arrayvec::ArrayString;
     use serde::{Deserialize, Serialize};
 
@@ -43,14 +43,14 @@ mod tests {
         log_client.log(event).unwrap();
 
         let rr = log_client.backend().pop_front();
-        assert!(matches!(rr, Some(ev) if ev == copy_event));
+        assert!(matches!(rr, Some(ev) if ev.data == copy_event));
 
         let rr = log_client.backend().pop_front();
         assert!(rr.is_none());
 
         log_client.log(event).unwrap();
         let rr = log_client.backend().pop_front();
-        assert!(matches!(rr, Some(ev) if ev == copy_event));
+        assert!(matches!(rr, Some(ev) if ev.data == copy_event));
 
         let rr = log_client.backend().pop_front();
         assert!(rr.is_none());

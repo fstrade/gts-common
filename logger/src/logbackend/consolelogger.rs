@@ -1,29 +1,15 @@
 use crate::error::GtsLoggerError;
 use crate::logbackend::LogBackend;
+use crate::logclient::LogEventTs;
 use core::fmt::Debug;
 use gts_transport::error::GtsTransportError;
 use gts_transport::membackend::memchunk::MemChunkHolder;
 use gts_transport::sync::lfringspsc::{spsc_ring_pair, SpScRingData, SpScRingSender};
 use log::info;
-use serde::{Deserialize, Serialize};
 use std::cell::UnsafeCell;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::time::Duration;
-
-pub struct LogContext {}
-
-#[derive(Debug, Serialize, Deserialize, Copy, Clone, PartialEq)]
-pub struct LogEventTs<T> {
-    pub timestamp: u64,
-    pub data: T,
-}
-
-impl<T> LogEventTs<T> {
-    pub fn new(timestamp: u64, data: T) -> Self {
-        LogEventTs { timestamp, data }
-    }
-}
 
 pub struct ConsoleThreadLogBacked<const RSIZE: usize, T>
 where
@@ -48,15 +34,25 @@ where
             spsc_ring_pair::<RSIZE, LogEventTs<T>, _>(MemChunkHolder::zeroed());
 
         let join_handle = Some(std::thread::spawn(move || {
+            let mut last_ts = None;
             while !*flag_clone.lock().unwrap() {
                 match log_rx.try_recv() {
                     Ok(res) => {
-                        info!("[LOG] @{} {:?}", res.timestamp, res.data);
+                        let diff = last_ts.map(|val| res.timestamp - val);
+                        match diff {
+                            None => {
+                                info!("[LOG] @{} (-) {:?}", res.timestamp, res.data);
+                            }
+                            Some(diff) => {
+                                info!("[LOG] @{} (+{} ns) {:?}", res.timestamp, diff, res.data);
+                            }
+                        }
+                        last_ts = Some(res.timestamp);
                     }
                     Err(GtsTransportError::WouldBlock) => {}
                     _ => unreachable!(),
                 }
-                std::thread::sleep(Duration::from_millis(100));
+                std::thread::sleep(Duration::from_millis(10));
             }
         }));
 
@@ -95,8 +91,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::logbackend::consolelogger::{ConsoleThreadLogBacked, LogEventTs};
-    use crate::logclient::{Log, LogClient};
+    use crate::logbackend::consolelogger::ConsoleThreadLogBacked;
+    use crate::logclient::LogClient;
     use arrayvec::ArrayString;
     use serde::{Deserialize, Serialize};
 
@@ -127,11 +123,9 @@ mod tests {
             some_string: ArrayString::from("333").unwrap(),
         });
 
-        let log_client =
-            LogClient::<_, LogEventTs<LogEvent>>::new(ConsoleThreadLogBacked::<3000, _>::new());
+        let log_client = LogClient::<_, LogEvent>::new(ConsoleThreadLogBacked::<3000, _>::new());
 
-        log_client.log(LogEventTs::new(111, event)).unwrap();
-
-        log_client.log(LogEventTs::new(111, event)).unwrap();
+        log_client.log(event).unwrap();
+        log_client.log_same(event).unwrap();
     }
 }
