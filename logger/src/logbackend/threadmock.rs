@@ -89,7 +89,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::logbackend::threadmock::MockThreadLogBacked;
-    use crate::logclient::{Log, LogClient};
+    use crate::logclient::LogClient;
     use arrayvec::ArrayString;
     use serde::{Deserialize, Serialize};
     use std::time::Duration;
@@ -129,7 +129,7 @@ mod tests {
 
         std::thread::sleep(Duration::from_millis(200));
         let rr = log_client.backend().pop_front();
-        assert!(matches!(rr, Some(ev) if ev == copy_event));
+        assert!(matches!(rr, Some(ev) if ev.data == copy_event));
 
         std::thread::sleep(Duration::from_millis(200));
         let rr = log_client.backend().pop_front();
@@ -138,7 +138,7 @@ mod tests {
         log_client.log(event).unwrap();
         std::thread::sleep(Duration::from_millis(200));
         let rr = log_client.backend().pop_front();
-        assert!(matches!(rr, Some(ev) if ev == copy_event));
+        assert!(matches!(rr, Some(ev) if ev.data == copy_event));
 
         std::thread::sleep(Duration::from_millis(200));
         let rr = log_client.backend().pop_front();
