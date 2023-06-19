@@ -4,6 +4,7 @@ version = "0.1.5"
 description = "Gts logger"
 edition = "2021"
 license = "Apache-2.0"
+repository = "https://github.com/fstrade/gts-common"
 
 [dependencies]
 libc = "0.2"
