@@ -66,7 +66,7 @@ logthread-beta closed
 
 # gts-transport
 
-Lock-free communication primitives. Could be used both for multithread and multi
+Lock-free communication primitives. Could be used both for multithread and multiprocess (shmem)
 Best performance could be reached with configuration, when single thread pinned to 
 dedicated core.
  * lfspmc - single producer multi consumer - for publish data, old data replaced by new one.
