@@ -1,7 +1,7 @@
 # gts-common
 Repo contain several utilities for low latency development
- * gts-logger: simple logger for <10ns per producer call. 
- * gts-transport: some lockfree transport
+ * gts-logger: simple logger for <10ns per producer call. https://crates.io/crates/gts-transport
+ * gts-transport: some lockfree transport https://crates.io/crates/gts-logger
 
 # gts-logger
 
