@@ -5,6 +5,9 @@ Repo contain several utilities for low latency development
 
 # gts-logger
 
+[![Latest version](https://img.shields.io/crates/v/gts-logger.svg)](https://crates.io/crates/gts-logger)
+[![Documentation](https://docs.rs/gts-logger/badge.svg)](https://docs.rs/gts-logger)
+
 Simple logger for <10ns per producer call.
 Restrictions: only copy type, fair copy all data. this is important for pinned thread, 
 it's not enough to share pointer/reference to data, need to wait until data transfers 
@@ -65,6 +68,10 @@ logthread-beta closed
 
 
 # gts-transport
+
+[![Latest version](https://img.shields.io/crates/v/gts-transport.svg)](https://crates.io/crates/gts-transport)
+[![Documentation](https://docs.rs/gts-transport/badge.svg)](https://docs.rs/gts-transport)
+
 
 Lock-free communication primitives. Could be used both for multithread and multiprocess (shmem)
 Best performance could be reached with configuration, when single thread pinned to 
