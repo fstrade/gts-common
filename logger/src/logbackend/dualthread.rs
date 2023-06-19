@@ -1,18 +1,17 @@
 use crate::error::GtsLoggerError;
 use crate::logbackend::LogBackend;
-use crate::logclient::{LogClient, LogEventTs};
+use crate::logclient::LogEventTs;
 use gts_transport::error::GtsTransportError;
 use gts_transport::membackend::memchunk::MemChunkHolder;
 use gts_transport::sync::lfringspsc::{spsc_ring_pair, SpScRingData, SpScRingSender};
-use log::{debug, error, info};
 use minstant::Instant;
 use serde::Serialize;
-use std::cell::{Cell, UnsafeCell};
+use std::cell::UnsafeCell;
 use std::fmt::Debug;
-use std::marker::PhantomData;
+use std::io::Write;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::mpsc::{channel, Receiver};
-use std::sync::{mpsc, Arc, Mutex};
+use std::sync::mpsc::channel;
+use std::sync::Arc;
 use std::time::Duration;
 
 pub struct DualThreadLogBacked<const RSIZE: usize, T>
@@ -28,9 +27,9 @@ where
 
 impl<T, const RSIZE: usize> DualThreadLogBacked<RSIZE, LogEventTs<T>>
 where
-    T: Copy + Send + 'static + Debug,
+    T: Copy + Send + 'static + Debug + Serialize,
 {
-    pub fn new(fname: &str) -> Self {
+    pub fn new(dest: impl Write + Send + 'static) -> Self {
         let running_flag_alpha = Arc::new(AtomicBool::new(true));
         let running_flag_beta = Arc::new(AtomicBool::new(true));
         // let queue = Arc::new(Mutex::new(VecDeque::<T>::new()));
@@ -43,7 +42,8 @@ where
 
         let (queue_tx, queue_rx) = channel();
 
-        let fname = fname.to_owned();
+        // let fname = fname.map(|fname| fname.to_string());
+
         let join_handle_alpha = Some(std::thread::spawn(move || {
             //let mut logs = Vec::with_capacity(3000);
             while running_flag_alpha_clone.load(Ordering::Relaxed) {
@@ -74,15 +74,22 @@ where
         let join_handle_beta = Some(std::thread::spawn(move || {
             let mut last_send = minstant::Instant::now();
 
+            let mut dest = dest;
+            // enum Fp {
+            //     File(File),
+            //     Sink(Sink),
+            // };
+            // let fp = match fname {
+            //     Some(name) => Fp::File(File::open(name).unwrap()),
+            //     None => Fp::Sink(std::io::sink()),
+            // };
+
             let mut logs = Vec::with_capacity(3000);
             while running_flag_beta_clone.load(Ordering::Relaxed) {
                 loop {
-                    //while logs.len() < logs.capacity() {
                     match queue_rx.try_recv() {
                         Ok(res) => {
                             logs.push(res);
-                            // //queue_tx.send(*res).unwrap();
-                            // println!("LOG: {:?}", res);
                         }
                         Err(_) => {
                             // either empty or closed, need to break
@@ -93,13 +100,10 @@ where
                 if !logs.is_empty()
                     && (logs.len() >= 5000 || last_send.elapsed() > Duration::from_millis(5000))
                 {
-                    // println!("SENDING [LOG]: {:?}", logs);
+                    for log in &logs {
+                        dest.write(&serde_json::to_vec(log).unwrap()).unwrap();
+                    }
                     last_send = Instant::now();
-                    let start = minstant::Instant::now();
-                    let log_size = logs.len();
-                    let duration = start.elapsed();
-
-                    // if sent is good
                 }
                 std::thread::sleep(Duration::from_millis(500));
             }

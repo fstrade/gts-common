@@ -46,10 +46,10 @@ where
                         let diff = last_ts.map(|val| res.timestamp - val);
                         match diff {
                             None => {
-                                //info!("[LOG] @{} (-) {:?}", res.timestamp, res.data);
+                                info!("[LOG] @{} (-) {:?}", res.timestamp, res.data);
                             }
                             Some(diff) => {
-                                //info!("[LOG] @{} (+{} ns) {:?}", res.timestamp, diff, res.data);
+                                info!("[LOG] @{} (+{} ns) {:?}", res.timestamp, diff, res.data);
                             }
                         }
                         last_ts = Some(res.timestamp);

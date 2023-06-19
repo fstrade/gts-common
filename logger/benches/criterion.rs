@@ -1,16 +1,9 @@
 use arrayvec::ArrayString;
 use criterion::{black_box, criterion_group, criterion_main, BatchSize, Criterion};
 use gts_logger::logbackend::dualthread::DualThreadLogBacked;
-use gts_logger::logclient::{LogClient, LogEventTs};
-use gts_transport::error::GtsTransportError;
-use gts_transport::membackend::shmem::ShmemHolder;
-use gts_transport::sync::lfspmc::{SpMcReceiver, SpMcSender};
-use log::info;
+use gts_logger::logclient::LogClient;
 use minstant::Instant;
 use serde::{Deserialize, Serialize};
-use std::sync::atomic::{AtomicU32, Ordering};
-use std::sync::mpsc::TryRecvError;
-use std::sync::Arc;
 use std::time::Duration;
 
 #[derive(Debug, Serialize, Deserialize, Copy, Clone, PartialEq)]
@@ -42,14 +35,12 @@ fn bench_dualthread(c: &mut Criterion) {
         some_string: ArrayString::from("333").unwrap(),
     });
 
-    let _copy_event = event;
-
     let log_client =
-        LogClient::<_, LogEvent>::new(DualThreadLogBacked::<100000, _>::new("logfile.bin"));
+        LogClient::<_, LogEvent>::new(DualThreadLogBacked::<100000, _>::new(std::io::sink()));
 
     let mut group = c.benchmark_group("dualthread");
 
-    // Unfortunatly, consumer thread consume log events slower, than
+    // Unfortunatly, consumer thread consume log events slower, than producer
 
     group.warm_up_time(Duration::from_micros(100));
     group.sample_size(50);
@@ -68,7 +59,7 @@ fn bench_dualthread(c: &mut Criterion) {
         );
     });
 
-    group.bench_function("log (1000 call log per iter)2", |b| {
+    group.bench_function("log (1000 call per iter)", |b| {
         b.iter_batched(
             || (),
             |_| {
@@ -81,7 +72,7 @@ fn bench_dualthread(c: &mut Criterion) {
         );
     });
 
-    group.bench_function("log same (1000 call log per iter)", |b| {
+    group.bench_function("log same (1000 calls per iter)", |b| {
         b.iter_batched(
             || (),
             |_| {
@@ -94,7 +85,7 @@ fn bench_dualthread(c: &mut Criterion) {
         );
     });
 
-    group.bench_function("log (1000 call (+timestamp) log per iter)", |b| {
+    group.bench_function("log (1000 calls (+timestamp) per iter)", |b| {
         b.iter_batched(
             || (),
             |_| {

@@ -1,10 +1,11 @@
 [package]
 name = "gts-logger"
-version = "0.1.5"
+version = "0.1.6"
 description = "Gts logger"
 edition = "2021"
 license = "Apache-2.0"
 repository = "https://github.com/fstrade/gts-common"
+authors = ["Igor Potapenko"]
 
 [dependencies]
 libc = "0.2"
@@ -14,9 +15,10 @@ env_logger = "0.10.0"
 thiserror = "1.0"
 anyhow = "1.0.68"
 bytemuck = "1.13.1"
-gts-transport = { version = "0.1.5" }
-serde = {version = "1.0.162", features = ["derive"] }
-arrayvec = {version = "0.7.2", features = ["serde"]}
+gts-transport = { version = "0.1.6" }
+serde = { version = "1.0.162", features = ["derive"] }
+serde_json = { version = "1.0.97" }
+arrayvec = { version = "0.7.2", features = ["serde"]}
 core_affinity = "0.8.0"
 
 [dev-dependencies]
