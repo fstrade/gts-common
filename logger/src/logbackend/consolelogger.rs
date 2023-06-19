@@ -24,7 +24,7 @@ impl<T, const RSIZE: usize> ConsoleThreadLogBacked<RSIZE, LogEventTs<T>>
 where
     T: Copy + Send + 'static + Debug,
 {
-    pub fn new() -> Self {
+    pub fn new(core_id: Option<usize>) -> Self {
         let flag = Arc::new(Mutex::new(false));
         // let queue = Arc::new(Mutex::new(VecDeque::<T>::new()));
 
@@ -34,6 +34,11 @@ where
             spsc_ring_pair::<RSIZE, LogEventTs<T>, _>(MemChunkHolder::zeroed());
 
         let join_handle = Some(std::thread::spawn(move || {
+            if let Some(core_id) = core_id {
+                assert!(core_affinity::set_for_current(core_affinity::CoreId {
+                    id: core_id
+                }));
+            }
             let mut last_ts = None;
             while !*flag_clone.lock().unwrap() {
                 match log_rx.try_recv() {
@@ -41,10 +46,10 @@ where
                         let diff = last_ts.map(|val| res.timestamp - val);
                         match diff {
                             None => {
-                                info!("[LOG] @{} (-) {:?}", res.timestamp, res.data);
+                                //info!("[LOG] @{} (-) {:?}", res.timestamp, res.data);
                             }
                             Some(diff) => {
-                                info!("[LOG] @{} (+{} ns) {:?}", res.timestamp, diff, res.data);
+                                //info!("[LOG] @{} (+{} ns) {:?}", res.timestamp, diff, res.data);
                             }
                         }
                         last_ts = Some(res.timestamp);
@@ -123,7 +128,8 @@ mod tests {
             some_string: ArrayString::from("333").unwrap(),
         });
 
-        let log_client = LogClient::<_, LogEvent>::new(ConsoleThreadLogBacked::<3000, _>::new());
+        let log_client =
+            LogClient::<_, LogEvent>::new(ConsoleThreadLogBacked::<3000, _>::new(None));
 
         log_client.log(event).unwrap();
         log_client.log_same(event).unwrap();

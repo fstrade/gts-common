@@ -33,14 +33,26 @@ fn main() {
         some_other_num: 7,
         some_string: ArrayString::from("333").unwrap(),
     });
-
     let _copy_event = event;
+    let core_ids = core_affinity::get_core_ids().unwrap();
+    let logthread_core = core_ids.last().unwrap().id;
+    let mainthread_core = core_ids.first().unwrap().id;
 
-    let log_client = LogClient::<_, LogEvent>::new(ConsoleThreadLogBacked::<5000, _>::new());
+    println!(
+        "main thread: {}, log thread: {}",
+        mainthread_core, logthread_core
+    );
+
+    let log_client = LogClient::<_, LogEvent>::new(ConsoleThreadLogBacked::<50000, _>::new(Some(
+        logthread_core,
+    )));
+    assert!(core_affinity::set_for_current(core_affinity::CoreId {
+        id: mainthread_core
+    }));
 
     info!(">> println with logger:");
 
-    let ulog_iters = 2000;
+    let ulog_iters = 20000;
     let gstart = minstant::Instant::now();
     for _ in 0..ulog_iters {
         log_client.log(event).unwrap();
@@ -51,7 +63,7 @@ fn main() {
 
     info!(">> println with logger(without timestamp):");
 
-    let ulogs_iters = 2000;
+    let ulogs_iters = 20000;
     let gsstart = minstant::Instant::now();
     for _ in 0..ulogs_iters {
         log_client.log_same(event).unwrap();
@@ -64,7 +76,7 @@ fn main() {
     let gstart = minstant::Instant::now();
     let mut timestamp = gstart.as_unix_nanos(&anc);
 
-    let iters = 2000;
+    let iters = 20000;
     for _ in 0..iters {
         let nstart = minstant::Instant::now();
         let ntimestamp = nstart.as_unix_nanos(&anc);
