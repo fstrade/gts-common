@@ -15,7 +15,8 @@ env_logger = "0.10.0"
 thiserror = "1.0"
 anyhow = "1.0.68"
 bytemuck = "1.13.1"
-gts-transport = { version = "0.1.6" }
+# gts-transport = { version = "0.1.5" }
+gts-transport = { version = "0.1.6", path = "../transport" }
 serde = { version = "1.0.162", features = ["derive"] }
 serde_json = { version = "1.0.97" }
 arrayvec = { version = "0.7.2", features = ["serde"]}
