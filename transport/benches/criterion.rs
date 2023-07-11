@@ -134,10 +134,12 @@ fn bench_shmem(c: &mut Criterion) {
     // The first call will take some time for calibartion
     let test_shmem1 = "crit_tx1";
     let test_shmem2 = "crit_tx2";
-    let mut tx1 = SpMcSender::<TestData, _>::new(ShmemHolder::create(test_shmem1));
-    let mut rx1 = SpMcReceiver::<TestData, _>::new(ShmemHolder::connect_ro(test_shmem1));
-    let mut tx2 = SpMcSender::<TestData, _>::new(ShmemHolder::create(test_shmem2));
-    let mut rx2 = SpMcReceiver::<TestData, _>::new(ShmemHolder::connect_ro(test_shmem2));
+    let mut tx1 = SpMcSender::<TestData, TestData, _, 1>::new(ShmemHolder::create(test_shmem1));
+    let mut rx1 =
+        SpMcReceiver::<TestData, TestData, _, 1>::new(ShmemHolder::connect_ro(test_shmem1));
+    let mut tx2 = SpMcSender::<TestData, TestData, _, 1>::new(ShmemHolder::create(test_shmem2));
+    let mut rx2 =
+        SpMcReceiver::<TestData, TestData, _, 1>::new(ShmemHolder::connect_ro(test_shmem2));
     //
     // let mut tx1: ShmemSender<TestData> = ShmemSender::create("tx1");
     // let mut rx1: ShmemReceiver<TestData> = ShmemReceiver::connect("tx1");
@@ -154,13 +156,13 @@ fn bench_shmem(c: &mut Criterion) {
         // let mut trx1 = tx2;
         loop {
             let next_val = loop {
-                let res = rx1.try_recv();
+                let res = rx1.try_recv_info();
                 match res {
                     Ok(next_val) => break next_val,
                     Err(_err) => continue,
                 }
             };
-            tx2.send(next_val).unwrap();
+            tx2.send_info(next_val).unwrap();
             last_val = next_val;
             if last_val.timestamp == 0 {
                 break;
@@ -187,13 +189,13 @@ fn bench_shmem(c: &mut Criterion) {
     group.bench_function("pingpong", |b| {
         b.iter(|| {
             let timestamp = minstant::Instant::now().as_unix_nanos(&anc);
-            tx1.send(&TestData { timestamp }).unwrap();
+            tx1.send_info(&TestData { timestamp }).unwrap();
             let counter_ok = &mut counter_ok;
             let counter_err_bad = &mut counter_err_bad;
             let counter_err_again = &mut counter_err_again;
 
             let _next_val = loop {
-                let ret = rx2.try_recv();
+                let ret = rx2.try_recv_info();
                 match ret {
                     Ok(next_val) => {
                         *counter_ok += 1;
@@ -223,11 +225,11 @@ fn bench_shmem(c: &mut Criterion) {
     group.bench_function("ping ", |b| {
         b.iter(|| {
             let timestamp = minstant::Instant::now().as_unix_nanos(&anc);
-            tx1.send(&TestData { timestamp }).unwrap();
+            tx1.send_info(&TestData { timestamp }).unwrap();
         });
     });
     group.finish();
-    tx1.send(&TestData { timestamp: 0 }).unwrap();
+    tx1.send_info(&TestData { timestamp: 0 }).unwrap();
 
     server.join().expect("join failed");
 }
@@ -243,10 +245,12 @@ fn bench_shmem_big(c: &mut Criterion) {
 
     let test_shmem1 = "critb_tx1";
     let test_shmem2 = "critb_tx2";
-    let mut tx1 = SpMcSender::<TestDataT, _>::new(ShmemHolder::create(test_shmem1));
-    let mut rx1 = SpMcReceiver::<TestDataT, _>::new(ShmemHolder::connect_ro(test_shmem1));
-    let mut tx2 = SpMcSender::<TestDataT, _>::new(ShmemHolder::create(test_shmem2));
-    let mut rx2 = SpMcReceiver::<TestDataT, _>::new(ShmemHolder::connect_ro(test_shmem2));
+    let mut tx1 = SpMcSender::<TestDataT, TestDataT, _, 1>::new(ShmemHolder::create(test_shmem1));
+    let mut rx1 =
+        SpMcReceiver::<TestDataT, TestDataT, _, 1>::new(ShmemHolder::connect_ro(test_shmem1));
+    let mut tx2 = SpMcSender::<TestDataT, TestDataT, _, 1>::new(ShmemHolder::create(test_shmem2));
+    let mut rx2 =
+        SpMcReceiver::<TestDataT, TestDataT, _, 1>::new(ShmemHolder::connect_ro(test_shmem2));
 
     let anc = minstant::Anchor::new();
     core_affinity::set_for_current(core_affinity::CoreId { id: 2 });
@@ -256,13 +260,13 @@ fn bench_shmem_big(c: &mut Criterion) {
         core_affinity::set_for_current(core_affinity::CoreId { id: 0 });
         loop {
             let next_val = loop {
-                let res = rx1.try_recv();
+                let res = rx1.try_recv_info();
                 match res {
                     Ok(next_val) => break next_val,
                     Err(_err) => continue,
                 }
             };
-            tx2.send(next_val).unwrap();
+            tx2.send_info(next_val).unwrap();
             last_val = next_val;
             if last_val.timestamp == 0 {
                 break;
@@ -289,7 +293,7 @@ fn bench_shmem_big(c: &mut Criterion) {
         b.iter(|| {
             let timestamp = minstant::Instant::now().as_unix_nanos(&anc);
             send_data.timestamp = timestamp;
-            tx1.send(&send_data).unwrap();
+            tx1.send_info(&send_data).unwrap();
             //            tx1.send(&TestDataBig{timestamp,  ..Default::default()});
             //            tx1.send(&TestDataBig{timestamp});
             let counter_ok = &mut counter_ok;
@@ -297,7 +301,7 @@ fn bench_shmem_big(c: &mut Criterion) {
             let counter_err_again = &mut counter_err_again;
 
             let _next_val = loop {
-                let ret = rx2.try_recv();
+                let ret = rx2.try_recv_info();
                 match ret {
                     Ok(next_val) => {
                         *counter_ok += 1;
@@ -324,14 +328,14 @@ fn bench_shmem_big(c: &mut Criterion) {
         b.iter(|| {
             let timestamp = minstant::Instant::now().as_unix_nanos(&anc);
             send_data.timestamp = timestamp;
-            tx1.send(&send_data).unwrap();
+            tx1.send_info(&send_data).unwrap();
         });
     });
 
     group.finish();
 
     send_data.timestamp = 0;
-    tx1.send(&send_data).unwrap();
+    tx1.send_info(&send_data).unwrap();
     // tx1.send(&TestDataBig{timestamp: 0, ..Default::default()});
     // tx1.send(&TestDataBig{timestamp: 0});
 

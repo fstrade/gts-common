@@ -1,6 +1,6 @@
 [package]
 name = "gts-transport"
-version = "0.1.6"
+version = "0.2.0"
 description = "Gts transport"
 edition = "2021"
 license = "Apache-2.0"
@@ -16,6 +16,7 @@ thiserror = "1.0"
 anyhow = "1.0.68"
 core_affinity = "0.8.0"
 bytemuck = "1.13.1"
+static_assertions = "1.1.0"
 
 [dev-dependencies]
 criterion = "0.3"
