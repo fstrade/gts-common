@@ -410,20 +410,6 @@ mod tests {
         timestamp: u64,
     }
 
-    #[allow(dead_code)]
-    #[derive(Copy, Debug, Clone, Default)]
-    struct ZeroableTestData {
-        timestamp: u64,
-    }
-    unsafe impl Zeroable for ZeroableTestData {}
-
-    #[test]
-    fn test_connect_nowhere() {
-        let shmem_name = "testtx1simple_randomfdjsafkdjkajf";
-
-        let res = ShmemHolder::<ZeroableTestData>::connect_ro(shmem_name);
-        assert!(res.is_err());
-    }
 
     #[test]
     fn test_simple_ping() {

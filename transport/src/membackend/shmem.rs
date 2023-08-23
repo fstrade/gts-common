@@ -211,3 +211,41 @@ impl<T> MemHolder<T> for ShmemHolder<T> {
         self.data as *const T
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[allow(dead_code)]
+    #[derive(Copy, Debug, Clone, Default)]
+    struct ZeroableTestData {
+        timestamp: u64,
+    }
+    unsafe impl Zeroable for ZeroableTestData {}
+
+    #[test]
+    fn test_connect_nowhere() {
+        let shmem_name = "testtx1simple_randomfdjsafkdjkajfdsfasd";
+
+        let res = ShmemHolder::<ZeroableTestData>::connect_ro(shmem_name);
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn test_drop_shmeme() {
+        let shmem_name = "test_too_big_random456465465465";
+
+        {
+            let res = ShmemHolder::<ZeroableTestData>::create(shmem_name);
+            println!(">>>>>>>>>>> {:?}", res);
+            assert!(res.is_ok());
+        }
+        {
+            let res = ShmemHolder::<ZeroableTestData>::connect_ro(shmem_name);
+            assert!(res.is_err());
+        }
+    }
+
+
+}
