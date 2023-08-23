@@ -212,7 +212,6 @@ impl<T> MemHolder<T> for ShmemHolder<T> {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -246,6 +245,4 @@ mod tests {
             assert!(res.is_err());
         }
     }
-
-
 }

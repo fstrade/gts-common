@@ -410,7 +410,6 @@ mod tests {
         timestamp: u64,
     }
 
-
     #[test]
     fn test_simple_ping() {
         let shmem_name = "testtx1simple";
