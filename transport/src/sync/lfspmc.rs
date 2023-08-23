@@ -410,12 +410,29 @@ mod tests {
         timestamp: u64,
     }
 
+    #[allow(dead_code)]
+    #[derive(Copy, Debug, Clone, Default)]
+    struct ZeroableTestData {
+        timestamp: u64,
+    }
+    unsafe impl Zeroable for ZeroableTestData {}
+
+    #[test]
+    fn test_connect_nowhere() {
+        let shmem_name = "testtx1simple_randomfdjsafkdjkajf";
+
+        let res = ShmemHolder::<ZeroableTestData>::connect_ro(shmem_name);
+        assert!(res.is_err());
+    }
+
     #[test]
     fn test_simple_ping() {
         let shmem_name = "testtx1simple";
-        let mut tx1 = SpMcSender::<TestData, TestData, _, 1>::new(ShmemHolder::create(shmem_name));
-        let mut rx1 =
-            SpMcReceiver::<TestData, TestData, _, 1>::new(ShmemHolder::connect_ro(shmem_name));
+        let mut tx1 =
+            SpMcSender::<TestData, TestData, _, 1>::new(ShmemHolder::create(shmem_name).unwrap());
+        let mut rx1 = SpMcReceiver::<TestData, TestData, _, 1>::new(
+            ShmemHolder::connect_ro(shmem_name).unwrap(),
+        );
 
         let res = rx1.try_recv_info();
         assert!(matches!(res, Err(GtsTransportError::Unitialized)));
@@ -439,9 +456,11 @@ mod tests {
     #[test]
     fn test_simple_ping_with_unhang() {
         let shmem_name = "testtx1simpleunhang";
-        let mut tx1 = SpMcSender::<TestData, TestData, _, 1>::new(ShmemHolder::create(shmem_name));
-        let mut rx1 =
-            SpMcReceiver::<TestData, TestData, _, 1>::new(ShmemHolder::connect_ro(shmem_name));
+        let mut tx1 =
+            SpMcSender::<TestData, TestData, _, 1>::new(ShmemHolder::create(shmem_name).unwrap());
+        let mut rx1 = SpMcReceiver::<TestData, TestData, _, 1>::new(
+            ShmemHolder::connect_ro(shmem_name).unwrap(),
+        );
 
         let res = rx1.try_recv_info_multi();
         assert!(matches!(res, Err(GtsTransportError::Unitialized)));
@@ -589,12 +608,16 @@ mod tests {
 
         let test_shmem1 = "testtx1heavy";
         let test_shmem2 = "testtx2heavy";
-        let mut tx1 = SpMcSender::<TestData, TestData, _, 1>::new(ShmemHolder::create(test_shmem1));
-        let mut rx1 =
-            SpMcReceiver::<TestData, TestData, _, 1>::new(ShmemHolder::connect_ro(test_shmem1));
-        let mut tx2 = SpMcSender::<TestData, TestData, _, 1>::new(ShmemHolder::create(test_shmem2));
-        let mut rx2 =
-            SpMcReceiver::<TestData, TestData, _, 1>::new(ShmemHolder::connect_ro(test_shmem2));
+        let mut tx1 =
+            SpMcSender::<TestData, TestData, _, 1>::new(ShmemHolder::create(test_shmem1).unwrap());
+        let mut rx1 = SpMcReceiver::<TestData, TestData, _, 1>::new(
+            ShmemHolder::connect_ro(test_shmem1).unwrap(),
+        );
+        let mut tx2 =
+            SpMcSender::<TestData, TestData, _, 1>::new(ShmemHolder::create(test_shmem2).unwrap());
+        let mut rx2 = SpMcReceiver::<TestData, TestData, _, 1>::new(
+            ShmemHolder::connect_ro(test_shmem2).unwrap(),
+        );
 
         let server = std::thread::spawn(move || {
             let mut last_val;

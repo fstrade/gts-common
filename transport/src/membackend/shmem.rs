@@ -24,6 +24,7 @@ use libc::{MAP_FAILED, MAP_SHARED, O_CREAT, O_RDONLY, O_RDWR, PROT_WRITE, S_IRUS
 use log::{error, warn};
 use std::ffi::CString;
 use std::marker::PhantomData;
+use thiserror::Error;
 
 #[derive(Debug)]
 enum ShmemHolderRole {
@@ -45,10 +46,16 @@ pub struct ShmemHolder<T> {
     _marker: PhantomData<T>,
 }
 
+#[derive(Debug, Error)]
+pub enum ShmemError {
+    #[error("StdIoError error")]
+    StdIoError(#[from] std::io::Error),
+}
+
 unsafe impl<T> Send for ShmemHolder<T> {}
 
 impl<T: Zeroable> ShmemHolder<T> {
-    pub fn create(name: &str) -> Self {
+    pub fn create(name: &str) -> Result<Self, ShmemError> {
         let (fd, data_ptr, length) = unsafe {
             let name_cstr = CString::new(name).expect("no way!");
             let null = std::ptr::null_mut();
@@ -64,9 +71,17 @@ impl<T: Zeroable> ShmemHolder<T> {
             let length = std::mem::size_of::<T>();
 
             let fd = shm_open(cname, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+            if fd == -1 {
+                let os_error = std::io::Error::last_os_error();
+                return Err(os_error.into());
+            }
             assert_ne!(fd, -1, "shm_open {} failed", name);
 
             let res = ftruncate(fd, length as off_t);
+            if res != 0 {
+                let os_error = std::io::Error::last_os_error();
+                return Err(os_error.into());
+            }
             assert_eq!(
                 res,
                 0,
@@ -76,6 +91,10 @@ impl<T: Zeroable> ShmemHolder<T> {
             );
 
             let addr = mmap(null, length, PROT_WRITE, MAP_SHARED, fd, 0);
+            if addr == MAP_FAILED {
+                let os_error = std::io::Error::last_os_error();
+                return Err(os_error.into());
+            }
             assert_ne!(addr, MAP_FAILED, "mmap {} failed", name);
 
             let data_ptr = addr as *mut T;
@@ -85,24 +104,24 @@ impl<T: Zeroable> ShmemHolder<T> {
         };
         assert_eq!(length, Self::LENGTH);
 
-        ShmemHolder {
+        Ok(ShmemHolder {
             role: ShmemHolderRole::Owner,
             fd,
             name: name.to_string(),
             // seqnum: 0,
             data: data_ptr,
             _marker: PhantomData,
-        }
+        })
     }
-    pub fn connect_rw(name: &str) -> Self {
+    pub fn connect_rw(name: &str) -> Result<Self, ShmemError> {
         Self::connect_ext(name, true)
     }
 
-    pub fn connect_ro(name: &str) -> Self {
+    pub fn connect_ro(name: &str) -> Result<Self, ShmemError> {
         Self::connect_ext(name, false)
     }
 
-    pub fn connect_ext(name: &str, write_permission: bool) -> Self {
+    pub fn connect_ext(name: &str, write_permission: bool) -> Result<Self, ShmemError> {
         let (shmem_flag, mmap_flag) = if write_permission {
             (O_RDWR, PROT_WRITE)
         } else {
@@ -116,9 +135,17 @@ impl<T: Zeroable> ShmemHolder<T> {
 
             let length = std::mem::size_of::<T>();
             let fd = shm_open(cname, shmem_flag, S_IRUSR | S_IWUSR);
+            if fd == -1 {
+                let os_error = std::io::Error::last_os_error();
+                return Err(os_error.into());
+            }
             assert_ne!(fd, -1, "shm_open {} failed", name);
 
             let addr = mmap(null, length, mmap_flag, MAP_SHARED, fd, 0);
+            if addr == MAP_FAILED {
+                let os_error = std::io::Error::last_os_error();
+                return Err(os_error.into());
+            }
             assert_ne!(addr, MAP_FAILED, "mmap {} failed", name);
 
             let data_ptr = addr as *mut T;
@@ -127,13 +154,13 @@ impl<T: Zeroable> ShmemHolder<T> {
         };
         assert_eq!(length, Self::LENGTH);
 
-        ShmemHolder {
+        Ok(ShmemHolder {
             role: ShmemHolderRole::Client,
             fd,
             name: name.to_string(),
             data: data_ptr,
             _marker: PhantomData,
-        }
+        })
     }
 }
 
