@@ -1,4 +1,5 @@
 use thiserror::Error;
+use crate::membackend;
 
 #[derive(Debug, Error)]
 pub enum GtsTransportError {
@@ -22,4 +23,7 @@ pub enum GtsTransportError {
 
     #[error("StdIoError error")]
     StdIoError(#[from] std::io::Error),
+
+    #[error("ShmemError error")]
+    ShmemError(#[from] membackend::shmem::ShmemError),
 }
